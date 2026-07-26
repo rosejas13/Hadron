@@ -1,0 +1,24 @@
+[package]
+name = "hadron"
+version = "1.2.0"
+edition = "2021"
+rust-version = "1.79"
+description = "Hadron — Goldleaf USB client (native Rust port of Quark)"
+license = "GPL-3.0-or-later"
+
+[[bin]]
+name = "hadron"
+path = "src/main.rs"
+
+[dependencies]
+nusb = "0.2"
+eframe = "0.32"
+egui = "0.32"
+rfd = "0.17"
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[profile.release]
+opt-level = 2
+lto = "thin"

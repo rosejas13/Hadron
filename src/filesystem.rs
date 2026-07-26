@@ -36,13 +36,18 @@ pub fn list_drives() -> Vec<String> {
             }
         }
     } else {
-        // Linux/others: best-effort mount enumeration via /proc/mounts.
+        // Linux/others: best-effort enumeration of real block-device mounts via
+        // /proc/mounts. Only mounts whose source is a /dev/ node are listed, so
+        // virtual filesystems (proc, sysfs, tmpfs, ...) are skipped. Matches the
+        // Java Quark behaviour which filtered on FileStore.name().startsWith("/dev/").
         if let Ok(text) = fs::read_to_string("/proc/mounts") {
             for line in text.lines() {
                 let mut parts = line.split_whitespace();
-                let _source = parts.next();
+                let source = parts.next().unwrap_or("");
                 if let Some(mount) = parts.next() {
-                    drives.push(mount.to_string());
+                    if source.starts_with("/dev/") && !mount.is_empty() {
+                        drives.push(mount.to_string());
+                    }
                 }
             }
         }

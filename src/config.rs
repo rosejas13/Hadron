@@ -70,12 +70,21 @@ impl Config {
 }
 
 pub fn default_config_path() -> PathBuf {
-    let config_home = std::env::var("XDG_CONFIG_HOME").ok()
-        .filter(|s| !s.trim().is_empty())
-        .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-            PathBuf::from(home).join(".config")
-        });
-    config_home.join("hadron").join("hadron-config.cfg")
+    if cfg!(windows) {
+        let base = std::env::var("APPDATA")
+            .map(PathBuf::from)
+            .unwrap_or_else(|_| {
+                PathBuf::from(std::env::var("USERPROFILE").unwrap_or_else(|_| ".".into()))
+            });
+        base.join("hadron").join("hadron-config.cfg")
+    } else {
+        let config_home = std::env::var("XDG_CONFIG_HOME").ok()
+            .filter(|s| !s.trim().is_empty())
+            .map(PathBuf::from)
+            .unwrap_or_else(|| {
+                let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+                PathBuf::from(home).join(".config")
+            });
+        config_home.join("hadron").join("hadron-config.cfg")
+    }
 }

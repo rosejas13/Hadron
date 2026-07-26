@@ -39,12 +39,30 @@ hadron --cfgfile /path/to/custom-config.cfg
 
 ## Platform support
 
-| OS      | USB backend                | Status |
-|---------|----------------------------|--------|
-| macOS (arm64, Apple Silicon) | `nusb` (IOKit, pure Rust) | Primary target, tested |
-| macOS (x86_64)               | `nusb`                   | Builds, untested |
-| Linux                         | `nusb` (usbfs)           | Builds, untested |
-| Windows                       | `nusb` (WinUSB)          | Builds, untested |
+Compilation is verified on all three targets (`cargo check` on `aarch64-apple-darwin`, `x86_64-unknown-linux-gnu`, and `x86_64-pc-windows-gnu`). Runtime with a real Switch is confirmed on macOS (arm64). Linux/Windows runtime is expected to work — the USB stack (`nusb`), GUI (`eframe`), and file dialogs (`rfd`) are all cross-platform — but not yet device-tested by the maintainer; reports very welcome.
+
+| OS      | USB backend                | Compiles | Runtime |
+|---------|----------------------------|:--------:|:-------:|
+| macOS (arm64, Apple Silicon) | `nusb` (IOKit, pure Rust) | ✅ | ✅ tested |
+| macOS (x86_64)               | `nusb` (IOKit)            | ✅ | not yet tested |
+| Linux (x86_64 / aarch64)     | `nusb` (usbfs)            | ✅ | not yet tested |
+| Windows (x86_64)             | `nusb` (WinUSB)           | ✅ | not yet tested |
+
+### Linux setup
+
+`nusb` talks to the kernel's usbfs directly, so your user needs permission to open the Switch's USB device. Create an udev rule (one-time, then replug the Switch):
+
+```sh
+echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="057E", ATTRS{idProduct}=="3000", MODE="0666"' \
+  | sudo tee /etc/udev/rules.d/52-nintendo-switch.rules
+sudo udevadm control --reload-rules
+```
+
+(Or add your user to a group with access to `/dev/bus/usb` — whatever your distro prefers.)
+
+### Windows setup
+
+The Switch in Goldleaf's *Remote PC (via USB)* mode presents a vendor-class device with no built-in Windows driver. `nusb` uses WinUSB, so you must associate the WinUSB driver with the device once using [Zadig](https://zadig.akeo.ie/): select the device with VID `057E` / PID `3000` (or "Goldleaf"), set the driver to **WinUSB**, and click Replace Driver. After that, Hadron can open it.
 
 ## Acknowledgements
 
